@@ -13,7 +13,7 @@ const {
 } = require('../database/db');
 
 const app = express();
-const PORT = process.env.DASHBOARD_PORT || 3000;
+const PORT = process.env.PORT || process.env.DASHBOARD_PORT || 3000;
 
 app.use(express.urlencoded({ extended: true }));
 
