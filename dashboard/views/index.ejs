@@ -1,0 +1,220 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+    <meta charset="UTF-8">
+    <title>FADE BOT Dashboard</title>
+    <style>
+        body {
+            margin: 0;
+            font-family: Arial, sans-serif;
+            background: #111318;
+            color: #ffffff;
+        }
+
+        header {
+            padding: 24px;
+            background: #1b1e26;
+            border-bottom: 1px solid #2b2f3a;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+
+        a {
+            color: #5865f2;
+            text-decoration: none;
+        }
+
+        .container {
+            padding: 24px;
+        }
+
+        .cards {
+            display: grid;
+            grid-template-columns: repeat(5, 1fr);
+            gap: 16px;
+            margin-bottom: 30px;
+        }
+
+        .card {
+            background: #1b1e26;
+            padding: 20px;
+            border-radius: 14px;
+            border: 1px solid #2b2f3a;
+        }
+
+        .card h2 {
+            margin: 0 0 10px;
+            font-size: 15px;
+            color: #aeb6c7;
+        }
+
+        .number {
+            font-size: 32px;
+            font-weight: bold;
+        }
+
+        table {
+            width: 100%;
+            border-collapse: collapse;
+            background: #1b1e26;
+            border-radius: 14px;
+            overflow: hidden;
+            margin-bottom: 30px;
+        }
+
+        th, td {
+            padding: 14px;
+            border-bottom: 1px solid #2b2f3a;
+            text-align: left;
+        }
+
+        th {
+            color: #aeb6c7;
+            background: #20242d;
+        }
+
+        .status-pending { color: #f1c40f; }
+        .status-review { color: #3498db; }
+        .status-accepted { color: #2ecc71; }
+        .status-denied { color: #e74c3c; }
+
+        .empty {
+            color: #aeb6c7;
+            padding: 16px;
+            background: #1b1e26;
+            border-radius: 14px;
+            border: 1px solid #2b2f3a;
+            margin-bottom: 30px;
+        }
+    </style>
+</head>
+
+<body>
+    <header>
+        <div>
+            <h1>FADE BOT Dashboard</h1>
+            <p>Панель заявок, кураторов и transcript-логов</p>
+        </div>
+
+        <a href="/logout">Выйти</a>
+    </header>
+
+    <div class="container">
+        <div class="cards">
+            <div class="card">
+                <h2>Всего заявок</h2>
+                <div class="number"><%= counts.total %></div>
+            </div>
+
+            <div class="card">
+                <h2>Ожидают</h2>
+                <div class="number status-pending"><%= counts.pending %></div>
+            </div>
+
+            <div class="card">
+                <h2>На рассмотрении</h2>
+                <div class="number status-review"><%= counts.review %></div>
+            </div>
+
+            <div class="card">
+                <h2>Приняты</h2>
+                <div class="number status-accepted"><%= counts.accepted %></div>
+            </div>
+
+            <div class="card">
+                <h2>Отклонены</h2>
+                <div class="number status-denied"><%= counts.denied %></div>
+            </div>
+        </div>
+
+        <h2>🕘 Последние заявки</h2>
+
+        <% if (recent.length === 0) { %>
+            <div class="empty">Заявок пока нет.</div>
+        <% } else { %>
+            <table>
+                <tr>
+                    <th>ID</th>
+                    <th>Discord</th>
+                    <th>Ник</th>
+                    <th>Возраст</th>
+                    <th>Статус</th>
+                    <th>Куратор ID</th>
+                    <th>Причина отказа</th>
+                </tr>
+
+                <% recent.forEach(app => { %>
+                    <tr>
+                        <td>
+                            <a href="/applications/<%= app.id %>">
+                                #<%= app.id %>
+                            </a>
+                        </td>
+                        <td><%= app.username %></td>
+                        <td><%= app.nickname %></td>
+                        <td><%= app.age %></td>
+                        <td class="status-<%= app.status %>"><%= app.status %></td>
+                        <td><%= app.curator_id || '-' %></td>
+                        <td><%= app.deny_reason || '-' %></td>
+                    </tr>
+                <% }) %>
+            </table>
+        <% } %>
+
+        <h2>📊 Статистика кураторов</h2>
+
+        <% if (stats.length === 0) { %>
+            <div class="empty">Статистика пока пустая.</div>
+        <% } else { %>
+            <table>
+                <tr>
+                    <th>Куратор ID</th>
+                    <th>Рассмотрел</th>
+                    <th>Принял</th>
+                    <th>Отклонил</th>
+                    <th>Закрыл тикетов</th>
+                    <th>Lock</th>
+                    <th>Unlock</th>
+                </tr>
+
+                <% stats.forEach(staff => { %>
+                    <tr>
+                        <td><%= staff.user_id %></td>
+                        <td><%= staff.reviewed %></td>
+                        <td><%= staff.accepted %></td>
+                        <td><%= staff.denied %></td>
+                        <td><%= staff.closed %></td>
+                        <td><%= staff.locked %></td>
+                        <td><%= staff.unlocked %></td>
+                    </tr>
+                <% }) %>
+            </table>
+        <% } %>
+
+        <h2>📁 Transcripts</h2>
+
+        <% if (transcripts.length === 0) { %>
+            <div class="empty">Transcript-файлов пока нет.</div>
+        <% } else { %>
+            <table>
+                <tr>
+                    <th>Файл</th>
+                    <th>Открыть</th>
+                </tr>
+
+                <% transcripts.forEach(file => { %>
+                    <tr>
+                        <td><%= file %></td>
+                        <td>
+                            <a href="/transcripts/<%= file %>" target="_blank">
+                                Открыть transcript
+                            </a>
+                        </td>
+                    </tr>
+                <% }) %>
+            </table>
+        <% } %>
+    </div>
+</body>
+</html>

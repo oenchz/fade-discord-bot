@@ -1,0 +1,121 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+    <meta charset="UTF-8">
+    <title>Заявка #<%= application.id %></title>
+    <style>
+        body {
+            margin: 0;
+            font-family: Arial, sans-serif;
+            background: #111318;
+            color: #ffffff;
+        }
+
+        header {
+            padding: 24px;
+            background: #1b1e26;
+            border-bottom: 1px solid #2b2f3a;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+
+        a {
+            color: #5865f2;
+            text-decoration: none;
+        }
+
+        .container {
+            padding: 24px;
+            max-width: 900px;
+        }
+
+        .card {
+            background: #1b1e26;
+            padding: 20px;
+            border-radius: 14px;
+            border: 1px solid #2b2f3a;
+            margin-bottom: 18px;
+        }
+
+        .label {
+            color: #aeb6c7;
+            font-size: 14px;
+            margin-bottom: 6px;
+        }
+
+        .value {
+            font-size: 18px;
+            white-space: pre-wrap;
+        }
+
+        .status-pending { color: #f1c40f; }
+        .status-review { color: #3498db; }
+        .status-accepted { color: #2ecc71; }
+        .status-denied { color: #e74c3c; }
+    </style>
+</head>
+
+<body>
+    <header>
+        <div>
+            <h1>Заявка #<%= application.id %></h1>
+            <p>Детальная информация</p>
+        </div>
+
+        <a href="/">Назад</a>
+    </header>
+
+    <div class="container">
+        <div class="card">
+            <div class="label">Discord</div>
+            <div class="value"><%= application.username %> / <%= application.user_id %></div>
+        </div>
+
+        <div class="card">
+            <div class="label">Игровой ник</div>
+            <div class="value"><%= application.nickname %></div>
+        </div>
+
+        <div class="card">
+            <div class="label">Возраст</div>
+            <div class="value"><%= application.age %></div>
+        </div>
+
+        <div class="card">
+            <div class="label">Статус</div>
+            <div class="value status-<%= application.status %>"><%= application.status %></div>
+        </div>
+
+        <div class="card">
+            <div class="label">Куратор ID</div>
+            <div class="value"><%= application.curator_id || '-' %></div>
+        </div>
+
+        <div class="card">
+            <div class="label">Текст заявки</div>
+            <div class="value"><%= application.about %></div>
+        </div>
+
+        <div class="card">
+            <div class="label">Причина отказа</div>
+            <div class="value"><%= application.deny_reason || '-' %></div>
+        </div>
+
+        <div class="card">
+            <div class="label">ID тикет-канала</div>
+            <div class="value"><%= application.ticket_channel_id %></div>
+        </div>
+
+        <div class="card">
+            <div class="label">Создана</div>
+            <div class="value"><%= new Date(application.created_at).toLocaleString('ru-RU') %></div>
+        </div>
+
+        <div class="card">
+            <div class="label">Обновлена</div>
+            <div class="value"><%= new Date(application.updated_at).toLocaleString('ru-RU') %></div>
+        </div>
+    </div>
+</body>
+</html>
