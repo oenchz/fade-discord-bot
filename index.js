@@ -8,6 +8,11 @@ const denyModal = require('./modals/denyModal');
 const createTicket = require('./tickets/createTicket');
 
 const {
+    activeEvents,
+    create: createEventPost
+} = require('./events/createEventPost');
+
+const {
     addStaffStat,
     updateApplicationStatus: updateApplicationStatusDB
 } = require('./database/db');
@@ -99,6 +104,40 @@ async function sendDM(user, message) {
     }
 }
 
+async function updateEventEmbed(message, eventData) {
+    const oldEmbed = message.embeds[0];
+    if (!oldEmbed) return;
+
+    const usersText = eventData.users.length
+        ? eventData.users.map((id, index) => `${index + 1}. <@${id}>`).join('\n')
+        : 'Пока никто не записался.';
+
+    const fields = oldEmbed.fields.map(field => {
+        if (field.name.startsWith('✅ Участники')) {
+            return {
+                name: `✅ Участники (${eventData.users.length}/${eventData.limit})`,
+                value: usersText,
+                inline: false
+            };
+        }
+
+        return {
+            name: field.name,
+            value: field.value,
+            inline: field.inline
+        };
+    });
+
+    const newEmbed = EmbedBuilder.from(oldEmbed)
+        .setFields(fields)
+        .setTimestamp();
+
+    await message.edit({
+        embeds: [newEmbed],
+        components: message.components
+    });
+}
+
 client.once(Events.ClientReady, () => {
     console.log(`✅ ${client.user.tag} запущен`);
 });
@@ -168,6 +207,99 @@ client.on(Events.InteractionCreate, async interaction => {
         }
 
         if (interaction.isButton()) {
+            if (interaction.customId === 'event_join') {
+                const eventData = activeEvents.get(interaction.message.id);
+
+                if (!eventData) {
+                    await interaction.reply({
+                        content: '❌ Ивент не найден или бот был перезапущен.',
+                        ephemeral: true
+                    });
+                    return;
+                }
+
+                if (eventData.users.includes(interaction.user.id)) {
+                    await interaction.reply({
+                        content: '❌ Ты уже записан на этот ивент.',
+                        ephemeral: true
+                    });
+                    return;
+                }
+
+                if (eventData.users.length >= eventData.limit) {
+                    await interaction.reply({
+                        content: '❌ Мест больше нет.',
+                        ephemeral: true
+                    });
+                    return;
+                }
+
+                eventData.users.push(interaction.user.id);
+
+                await updateEventEmbed(interaction.message, eventData);
+
+                await interaction.reply({
+                    content: '✅ Ты записался на ивент.',
+                    ephemeral: true
+                });
+
+                return;
+            }
+
+            if (interaction.customId === 'event_leave') {
+                const eventData = activeEvents.get(interaction.message.id);
+
+                if (!eventData) {
+                    await interaction.reply({
+                        content: '❌ Ивент не найден или бот был перезапущен.',
+                        ephemeral: true
+                    });
+                    return;
+                }
+
+                if (!eventData.users.includes(interaction.user.id)) {
+                    await interaction.reply({
+                        content: '❌ Ты не был записан на этот ивент.',
+                        ephemeral: true
+                    });
+                    return;
+                }
+
+                eventData.users = eventData.users.filter(id => id !== interaction.user.id);
+
+                await updateEventEmbed(interaction.message, eventData);
+
+                await interaction.reply({
+                    content: '✅ Ты убрал себя из списка.',
+                    ephemeral: true
+                });
+
+                return;
+            }
+
+            if (interaction.customId === 'event_list') {
+                const eventData = activeEvents.get(interaction.message.id);
+
+                if (!eventData) {
+                    await interaction.reply({
+                        content: '❌ Ивент не найден или бот был перезапущен.',
+                        ephemeral: true
+                    });
+                    return;
+                }
+
+                const list = eventData.users.length
+                    ? eventData.users.map((id, index) => `${index + 1}. <@${id}>`).join('\n')
+                    : 'Пока никто не записался.';
+
+                await interaction.reply({
+                    content: `📋 **Список участников:**\n${list}`,
+                    ephemeral: true
+                });
+
+                return;
+            }
+
             if (interaction.customId === 'apply_button') {
                 await applyModal.show(interaction);
                 return;
@@ -349,21 +481,9 @@ client.on(Events.InteractionCreate, async interaction => {
                         .setTitle('📁 Transcript сохранён')
                         .setColor(0x2b2d31)
                         .addFields(
-                            {
-                                name: 'Тикет',
-                                value: interaction.channel.name,
-                                inline: true
-                            },
-                            {
-                                name: 'Закрыл',
-                                value: `${interaction.user}`,
-                                inline: true
-                            },
-                            {
-                                name: 'Файл',
-                                value: fileName,
-                                inline: false
-                            }
+                            { name: 'Тикет', value: interaction.channel.name, inline: true },
+                            { name: 'Закрыл', value: `${interaction.user}`, inline: true },
+                            { name: 'Файл', value: fileName, inline: false }
                         )
                         .setTimestamp();
 
@@ -382,6 +502,11 @@ client.on(Events.InteractionCreate, async interaction => {
         }
 
         if (interaction.isModalSubmit()) {
+            if (interaction.customId === 'event_create_modal') {
+                await createEventPost(interaction);
+                return;
+            }
+
             if (interaction.customId === 'apply_modal') {
                 await createTicket(interaction);
                 return;
