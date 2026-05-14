@@ -29,12 +29,6 @@ module.exports = {
             .setStyle(TextInputStyle.Short)
             .setRequired(true);
 
-        const roleInput = new TextInputBuilder()
-            .setCustomId('event_role')
-            .setLabel('ID роли для пинга')
-            .setStyle(TextInputStyle.Short)
-            .setRequired(true);
-
         const descriptionInput = new TextInputBuilder()
             .setCustomId('event_description')
             .setLabel('Описание / комментарий')
@@ -45,7 +39,6 @@ module.exports = {
             new ActionRowBuilder().addComponents(placeInput),
             new ActionRowBuilder().addComponents(timeInput),
             new ActionRowBuilder().addComponents(limitInput),
-            new ActionRowBuilder().addComponents(roleInput),
             new ActionRowBuilder().addComponents(descriptionInput)
         );
 

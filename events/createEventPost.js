@@ -15,7 +15,7 @@ module.exports = {
         const place = interaction.fields.getTextInputValue('event_place');
         const time = interaction.fields.getTextInputValue('event_time');
         const limit = interaction.fields.getTextInputValue('event_limit');
-        const roleId = interaction.fields.getTextInputValue('event_role');
+        const roleId = 'everyone';
         const description = interaction.fields.getTextInputValue('event_description') || 'Без описания';
 
         const channel = await interaction.guild.channels
@@ -82,7 +82,7 @@ module.exports = {
         );
 
         const message = await channel.send({
-            content: `<@&${roleId}>`,
+            content: `@everyone`,
             embeds: [embed],
             components: [buttons]
         });
